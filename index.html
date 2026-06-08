@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Muhammad Arkam — Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Playfair+Display:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#c0392b;--red2:#e74c3c;--red3:#fdecea;
+  --blue:#1a3a6b;--blue2:#2563eb;--blue3:#dbeafe;
+  --dark:#0d0d1a;--dark2:#13132a;--dark3:#1e1e3a;
+  --mid:#2a2a4a;
+  --white:#ffffff;--off:#f8f9ff;
+  --text:#1a1a2e;--muted:#5a5a7a;
+  --border:rgba(37,99,235,0.15);
+  --r:10px;--rlg:18px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Space Grotesk',sans-serif;background:var(--off);color:var(--text);overflow-x:hidden;cursor:none;line-height:1.6}
+
+/* CURSOR */
+#cur{position:fixed;width:10px;height:10px;background:var(--red2);border-radius:50%;pointer-events:none;z-index:99999;transform:translate(-50%,-50%);transition:transform .1s}
+#cur-o{position:fixed;width:32px;height:32px;border:1.5px solid var(--blue2);border-radius:50%;pointer-events:none;z-index:99998;transform:translate(-50%,-50%);transition:transform .18s,border-color .2s}
+body *{cursor:none}
+
+/* SCROLL BAR */
+#sbar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--blue2),var(--red2));z-index:10000;width:0;box-shadow:0 0 6px rgba(192,57,43,0.5)}
+
+/* NAV */
+nav{position:fixed;top:3px;left:0;right:0;z-index:900;padding:0 3rem;height:62px;display:flex;align-items:center;justify-content:space-between;background:rgba(13,13,26,0.97);backdrop-filter:blur(12px);border-bottom:1px solid rgba(37,99,235,0.18)}
+.logo{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:800;letter-spacing:-0.5px}
+.logo span:first-child{color:var(--white)}
+.logo span:last-child{color:var(--red2)}
+.nav-links{display:flex;gap:2rem;list-style:none}
+.nav-links a{color:rgba(255,255,255,0.5);text-decoration:none;font-size:0.75rem;font-weight:500;letter-spacing:1.2px;text-transform:uppercase;transition:color .2s;position:relative;padding-bottom:2px}
+.nav-links a::after{content:'';position:absolute;bottom:0;left:0;width:0;height:1px;background:var(--red2);transition:width .25s}
+.nav-links a:hover{color:var(--white)}
+.nav-links a:hover::after{width:100%}
+
+/* HERO */
+.hero{min-height:100vh;background:var(--dark);display:grid;grid-template-columns:1fr 380px;align-items:center;padding:7rem 3rem 4rem;gap:3rem;position:relative;overflow:hidden}
+.hero-decor{position:absolute;inset:0;pointer-events:none}
+.decor-line{position:absolute;background:rgba(37,99,235,0.06)}
+.decor-line.h1{height:1px;width:60%;top:35%;left:0}
+.decor-line.h2{height:1px;width:40%;top:65%;right:0}
+.decor-line.v1{width:1px;height:70%;top:15%;left:55%}
+.decor-dot{position:absolute;border-radius:50%;animation:orbFloat ease-in-out infinite}
+.decor-dot.d1{width:350px;height:350px;background:radial-gradient(circle,rgba(37,99,235,0.12) 0%,transparent 70%);top:-80px;right:100px;animation-duration:10s}
+.decor-dot.d2{width:250px;height:250px;background:radial-gradient(circle,rgba(192,57,43,0.1) 0%,transparent 70%);bottom:60px;left:80px;animation-duration:13s;animation-delay:-5s}
+@keyframes orbFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-22px)}}
+
+/* rotating grid bg */
+.grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(37,99,235,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,0.04) 1px,transparent 1px);background-size:60px 60px;animation:gridMove 20s linear infinite}
+@keyframes gridMove{from{transform:translateY(0)}to{transform:translateY(60px)}}
+
+.hero-left{position:relative;z-index:2}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;background:rgba(192,57,43,0.12);border:1px solid rgba(192,57,43,0.35);color:#e74c3c;font-size:0.7rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:6px 14px;border-radius:40px;margin-bottom:1.5rem}
+.hero-tag-dot{width:7px;height:7px;border-radius:50%;background:var(--red2);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(231,76,60,0.4)}70%{box-shadow:0 0 0 8px rgba(231,76,60,0)}}
+
+.hero-name{font-family:'Playfair Display',serif;font-size:clamp(3rem,6.5vw,5.5rem);font-weight:800;color:var(--white);line-height:1;letter-spacing:-2px;margin-bottom:.5rem;animation:slideUp .8s .1s ease both}
+.hero-name .line2{color:transparent;-webkit-text-stroke:1.5px rgba(255,255,255,0.3);display:block}
+.hero-name .accent{color:var(--red2);-webkit-text-stroke:0}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+
+.hero-role{font-family:'JetBrains Mono',monospace;font-size:.9rem;color:rgba(255,255,255,0.4);margin-bottom:1.8rem;min-height:1.4em}
+#typed{color:var(--blue2)}
+.caret{display:inline-block;width:2px;height:.85em;background:var(--red2);vertical-align:middle;margin-left:3px;animation:caretBlink .75s step-end infinite}
+@keyframes caretBlink{0%,100%{opacity:1}50%{opacity:0}}
+
+.hero-desc{font-size:.95rem;color:rgba(255,255,255,0.55);max-width:480px;line-height:1.9;margin-bottom:2.2rem}
+
+.hero-btns{display:flex;gap:1rem;flex-wrap:wrap}
+.btn-primary{background:var(--red2);color:var(--white);padding:12px 28px;border-radius:var(--r);font-weight:600;font-size:.85rem;text-decoration:none;border:none;cursor:none;transition:all .2s;position:relative;overflow:hidden;display:inline-block}
+.btn-primary::before{content:'';position:absolute;inset:0;background:rgba(255,255,255,0);transition:background .2s}
+.btn-primary:hover{background:#a93226;transform:translateY(-2px);box-shadow:0 10px 30px rgba(192,57,43,0.4)}
+.btn-outline{background:transparent;color:rgba(255,255,255,0.75);padding:12px 28px;border-radius:var(--r);font-weight:500;font-size:.85rem;text-decoration:none;border:1px solid rgba(37,99,235,0.4);cursor:none;transition:all .2s;display:inline-block}
+.btn-outline:hover{border-color:var(--blue2);color:var(--white);background:rgba(37,99,235,0.1)}
+
+.hero-stats{display:flex;gap:2.5rem;margin-top:2.5rem;padding-top:2rem;border-top:1px solid rgba(37,99,235,0.15)}
+.stat-num{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;color:var(--white);display:block}
+.stat-lbl{font-size:.68rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1.5px}
+
+/* PHOTO CARD */
+.hero-right{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:1.5rem}
+.photo-frame{position:relative;width:260px}
+.photo-frame-ring{position:absolute;inset:-12px;border-radius:24px;border:1px solid rgba(37,99,235,0.25);animation:spinFrame 8s linear infinite}
+.photo-frame-ring2{position:absolute;inset:-22px;border-radius:30px;border:1px dashed rgba(192,57,43,0.15);animation:spinFrame 14s linear infinite reverse}
+@keyframes spinFrame{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.photo-inner{width:260px;height:310px;border-radius:18px;overflow:hidden;background:var(--dark3);border:2px solid rgba(37,99,235,0.3);position:relative}
+.photo-inner img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block}
+.photo-fallback{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:4rem;font-weight:800;color:var(--blue2);background:var(--dark3)}
+.photo-badge{background:var(--dark2);border:1px solid rgba(37,99,235,0.25);border-radius:12px;padding:.9rem 1.2rem;width:100%;text-align:center}
+.photo-badge-name{font-weight:700;color:var(--white);font-size:.95rem;margin-bottom:2px}
+.photo-badge-sub{font-size:.72rem;color:rgba(255,255,255,0.4);font-family:'JetBrains Mono',monospace}
+.avail-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(26,155,127,0.12);border:1px solid rgba(26,155,127,0.3);color:#2ecc71;font-size:.7rem;font-weight:600;padding:4px 12px;border-radius:40px;margin-top:.5rem}
+.avail-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:#2ecc71;animation:pulse 2s infinite}
+
+/* SECTIONS */
+.section{padding:5rem 3rem;position:relative}
+.section:nth-child(odd){background:var(--white)}
+.section:nth-child(even){background:var(--off)}
+.sec-wrap{max-width:960px;margin:0 auto}
+.sec-label{font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:500;color:var(--blue2);letter-spacing:2px;text-transform:uppercase;margin-bottom:.4rem;display:flex;align-items:center;gap:.6rem}
+.sec-label::before{content:'';display:inline-block;width:24px;height:1.5px;background:var(--red2)}
+.sec-title{font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:800;color:var(--text);margin-bottom:.4rem;letter-spacing:-1px}
+.sec-title .acc{color:var(--red2)}
+.sec-div{width:48px;height:3px;background:linear-gradient(90deg,var(--blue2),var(--red2));border-radius:3px;margin-bottom:2.5rem}
+
+/* ABOUT */
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:start}
+.about-text p{font-size:.95rem;color:var(--muted);line-height:1.95;margin-bottom:1rem}
+.about-tags{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.2rem}
+.atag{background:var(--blue3);color:var(--blue);font-size:.72rem;font-weight:600;padding:5px 12px;border-radius:40px;border:1px solid rgba(37,99,235,0.2);transition:all .2s}
+.atag:hover{background:var(--blue2);color:var(--white);transform:translateY(-2px)}
+.atag.red{background:var(--red3);color:var(--red);border-color:rgba(192,57,43,0.2)}
+.atag.red:hover{background:var(--red2);color:var(--white)}
+
+.info-card{background:var(--dark);border-radius:var(--rlg);overflow:hidden;border:1px solid rgba(37,99,235,0.18)}
+.info-card-head{background:linear-gradient(135deg,var(--blue),var(--dark3));padding:1.2rem 1.5rem;display:flex;align-items:center;gap:.75rem}
+.info-head-ava{width:44px;height:44px;border-radius:10px;background:var(--red2);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-weight:800;font-size:1.1rem;color:var(--white);flex-shrink:0;overflow:hidden}
+.info-head-ava img{width:100%;height:100%;object-fit:cover;object-position:center top}
+.info-head-name{font-weight:700;color:var(--white);font-size:.9rem}
+.info-head-sub{font-size:.72rem;color:rgba(255,255,255,0.4);font-family:'JetBrains Mono',monospace}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:.75rem 1.5rem;border-bottom:1px solid rgba(37,99,235,0.08);transition:background .2s}
+.info-row:last-child{border-bottom:none}
+.info-row:hover{background:rgba(37,99,235,0.04)}
+.info-key{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.35)}
+.info-val{font-size:.82rem;color:rgba(255,255,255,0.75);text-align:right}
+
+/* SKILLS */
+#skills{background:var(--dark)!important}
+#skills .sec-title{color:var(--white)}
+.skills-wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.2rem}
+.skill-bar-card{background:rgba(255,255,255,0.03);border:1px solid rgba(37,99,235,0.12);border-radius:var(--r);padding:1.3rem;transition:all .25s}
+.skill-bar-card:hover{border-color:rgba(37,99,235,0.4);background:rgba(37,99,235,0.05);transform:translateY(-3px)}
+.skill-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem}
+.skill-name{font-weight:600;color:var(--white);font-size:.9rem;display:flex;align-items:center;gap:.5rem}
+.skill-ico{font-size:1.1rem}
+.skill-pct{font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--red2);font-weight:500}
+.skill-track{height:4px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden}
+.skill-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--blue2),var(--red2));width:0;transition:width 1.4s cubic-bezier(.16,1,.3,1)}
+.skill-fill.go{width:var(--w)}
+.skill-sub{font-size:.72rem;color:rgba(255,255,255,0.35);margin-top:.5rem;font-family:'JetBrains Mono',monospace}
+
+/* CERTS */
+.certs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem}
+.cert{border-radius:var(--rlg);padding:1.6rem;position:relative;overflow:hidden;transition:all .3s;border:1.5px solid transparent}
+.cert.blue-cert{background:linear-gradient(135deg,#eef4ff,#dbeafe);border-color:rgba(37,99,235,0.25)}
+.cert.red-cert{background:linear-gradient(135deg,#fff0ef,#fdecea);border-color:rgba(192,57,43,0.25)}
+.cert.dark-cert{background:linear-gradient(135deg,var(--dark2),var(--dark3));border-color:rgba(37,99,235,0.2)}
+.cert:hover{transform:translateY(-5px) scale(1.01)}
+.cert-glyph{font-size:2.2rem;display:block;margin-bottom:.7rem;transition:transform .3s}
+.cert:hover .cert-glyph{transform:scale(1.12) rotate(-6deg)}
+.cert-badge{display:inline-flex;align-items:center;gap:4px;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:3px 9px;border-radius:40px;margin-bottom:.7rem}
+.cert.blue-cert .cert-badge{background:rgba(37,99,235,0.15);color:var(--blue)}
+.cert.red-cert .cert-badge{background:rgba(192,57,43,0.15);color:var(--red)}
+.cert.dark-cert .cert-badge{background:rgba(231,76,60,0.15);color:var(--red2)}
+.cert-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;margin-bottom:.3rem}
+.cert.blue-cert .cert-title,.cert.red-cert .cert-title{color:var(--text)}
+.cert.dark-cert .cert-title{color:var(--white)}
+.cert-sub{font-size:.78rem;line-height:1.55}
+.cert.blue-cert .cert-sub,.cert.red-cert .cert-sub{color:var(--muted)}
+.cert.dark-cert .cert-sub{color:rgba(255,255,255,0.45)}
+.cert-issuer{font-size:.7rem;font-weight:600;margin-top:.8rem;display:flex;align-items:center;gap:4px}
+.cert.blue-cert .cert-issuer{color:var(--blue2)}
+.cert.red-cert .cert-issuer{color:var(--red)}
+.cert.dark-cert .cert-issuer{color:rgba(255,255,255,0.4)}
+.cert-corner-dec{position:absolute;top:-15px;right:-15px;width:60px;height:60px;border-radius:50%;opacity:.1}
+.cert.blue-cert .cert-corner-dec{background:var(--blue2)}
+.cert.red-cert .cert-corner-dec{background:var(--red)}
+
+/* PROJECTS */
+#projects{background:var(--dark)!important}
+#projects .sec-title{color:var(--white)}
+.proj-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.2rem}
+.proj-card{background:rgba(255,255,255,0.03);border:1px solid rgba(37,99,235,0.12);border-radius:var(--rlg);padding:1.6rem;position:relative;overflow:hidden;transition:all .3s;display:flex;flex-direction:column;justify-content:space-between}
+.proj-card::after{content:'';position:absolute;bottom:0;left:0;width:0;height:2px;background:linear-gradient(90deg,var(--blue2),var(--red2));transition:width .4s}
+.proj-card:hover::after{width:100%}
+.proj-card:hover{border-color:rgba(37,99,235,0.35);transform:translateY(-4px);background:rgba(37,99,235,0.05)}
+.proj-kind{display:inline-block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;padding:3px 10px;border-radius:40px;margin-bottom:.9rem;align-self:flex-start}
+.proj-kind.k-vibe{background:rgba(231,76,60,0.15);color:var(--red2)}
+.proj-kind.k-wip{background:rgba(37,99,235,0.15);color:var(--blue2)}
+.proj-kind.k-done{background:rgba(46,204,113,0.15);color:#2ecc71}
+.proj-name{font-family:'Playfair Display',serif;font-weight:700;font-size:1.1rem;color:var(--white);margin-bottom:.35rem}
+.proj-desc{font-size:.8rem;color:rgba(255,255,255,0.45);line-height:1.75;margin-bottom: auto;}
+.proj-pills{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:1rem;margin-bottom:1rem}
+.pill{font-size:.66rem;padding:3px 9px;border-radius:6px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.08);transition:all .2s}
+.pill:hover{background:rgba(37,99,235,0.2);color:var(--blue2);border-color:rgba(37,99,235,0.4)}
+.proj-plus{border:1.5px dashed rgba(192,57,43,0.3);background:rgba(192,57,43,0.03);border-radius:var(--rlg);padding:1.6rem;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:180px;transition:all .3s}
+.proj-plus:hover{border-color:var(--red2);background:rgba(192,57,43,0.06)}
+.proj-plus-icon{font-size:2rem;margin-bottom:.7rem;opacity:.4}
+.proj-plus p{font-size:.8rem;color:rgba(255,255,255,0.3);margin-bottom:.9rem}
+
+/* EDUCATION */
+.edu-timeline{position:relative;padding-left:2.5rem}
+.edu-timeline::before{content:'';position:absolute;left:7px;top:10px;bottom:10px;width:2px;background:linear-gradient(180deg,var(--blue2),var(--red2))}
+.edu-item{position:relative;padding-bottom:2rem}
+.edu-item:last-child{padding-bottom:0}
+.edu-dot{position:absolute;left:-2.5rem;top:5px;width:16px;height:16px;border-radius:50%;background:var(--white);border:2.5px solid var(--blue2);z-index:1;transition:transform .3s}
+.edu-item:first-child .edu-dot{background:var(--red2);border-color:var(--red2)}
+.edu-item:hover .edu-dot{transform:scale(1.3)}
+.edu-yr-badge{display:inline-flex;align-items:center;background:var(--blue3);color:var(--blue);font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:40px;margin-bottom:.4rem;border:1px solid rgba(37,99,235,0.2)}
+.edu-item:first-child .edu-yr-badge{background:var(--red3);color:var(--red);border-color:rgba(192,57,43,0.2)}
+.edu-deg{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--text);margin-bottom:3px}
+.edu-school{font-size:.82rem;color:var(--muted)}
+
+/* EXPERIENCE */
+#experience{background:var(--dark)!important}
+#experience .sec-title{color:var(--white)}
+.exp-list{display:flex;flex-direction:column;gap:1.2rem}
+.exp-item{background:rgba(255,255,255,0.03);border:1px solid rgba(37,99,235,0.1);border-radius:var(--r);padding:1.5rem;display:grid;grid-template-columns:56px 1fr;gap:1.3rem;align-items:start;transition:all .25s}
+.exp-item:hover{border-color:rgba(192,57,43,0.4);transform:translateX(5px);box-shadow:-4px 0 0 var(--red2)}
+.exp-num-box{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,rgba(37,99,235,0.2),rgba(192,57,43,0.2));border:1px solid rgba(37,99,235,0.2);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1rem;color:var(--red2)}
+.exp-role{font-weight:700;color:var(--white);font-size:.97rem;margin-bottom:.3rem}
+.exp-desc{font-size:.82rem;color:rgba(255,255,255,0.45);line-height:1.8}
+
+/* CONTACT */
+.c-wrap{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.5rem}
+.c-item{background:var(--dark);border:1px solid rgba(37,99,235,0.15);border-radius:var(--r);padding:1.2rem 1.4rem;display:flex;gap:1rem;align-items:center;transition:all .25s}
+.c-item:hover{border-color:var(--blue2);transform:translateY(-3px);background:rgba(37,99,235,0.06)}
+.c-icon{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,rgba(37,99,235,0.15),rgba(192,57,43,0.15));display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;transition:transform .25s}
+.c-item:hover .c-icon{transform:scale(1.1) rotate(-5deg)}
+.c-lbl{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.3);margin-bottom:3px}
+.c-val{font-size:.85rem;color:var(--white)}
+#contact{background:var(--dark)!important}
+#contact .sec-title{color:var(--white)}
+.cta-box{background:linear-gradient(135deg,rgba(37,99,235,0.1),rgba(192,57,43,0.08));border:1px dashed rgba(37,99,235,0.3);border-radius:var(--rlg);padding:2rem;text-align:center}
+.cta-box p{font-size:.88rem;color:rgba(255,255,255,0.4);margin-bottom:1rem}
+
+/* FOOTER */
+footer{background:var(--dark2);padding:1.5rem 3rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;border-top:1px solid rgba(37,99,235,0.1)}
+.foot-logo{font-family:'Playfair Display',serif;font-weight:800;font-size:.95rem}
+.foot-logo span:first-child{color:var(--white)}
+.foot-logo span:last-child{color:var(--red2)}
+.foot-copy{font-size:.7rem;color:rgba(255,255,255,0.2);font-family:'JetBrains Mono',monospace}
+
+/* FADE IN */
+.fi{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
+.fi.vis{opacity:1;transform:none}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .hero{grid-template-columns:1fr;padding:6rem 1.5rem 3rem}
+  .hero-right{display:none}
+  .section{padding:3.5rem 1.5rem}
+  nav{padding:0 1.5rem}
+  .about-grid{grid-template-columns:1fr}
+  .certs-grid{grid-template-columns:1fr}
+  .c-wrap{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="sbar"></div>
+<div id="cur"></div>
+<div id="cur-o"></div>
+
+<nav>
+  <div class="logo"><span>Arkam</span><span>.</span></div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#skills">Skills</a></li>
+    <li><a href="#certs">Certs</a></li>
+    <li><a href="#projects">Projects</a></li>
+    <li><a href="#education">Education</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<section class="hero" id="home">
+  <div class="hero-decor">
+    <div class="grid-bg"></div>
+    <div class="decor-line h1"></div>
+    <div class="decor-line h2"></div>
+    <div class="decor-line v1"></div>
+    <div class="decor-dot d1"></div>
+    <div class="decor-dot d2"></div>
+  </div>
+
+  <div class="hero-left">
+    <div class="hero-tag"><span class="hero-tag-dot"></span>Open to Internships</div>
+    <h1 class="hero-name">
+      Muhammad<br>
+      <span class="line2"><span class="accent">Arkam</span></span>
+    </h1>
+    <p class="hero-role">// <span id="typed"></span><span class="caret"></span></p>
+    <p class="hero-desc">Detail-oriented IT student with certified MS Office skills and fast typing speed — building real-world web projects through vibe coding, every single day.</p>
+    <div class="hero-btns">
+      <a href="#contact" class="btn-primary">Hire Me →</a>
+      <a href="#projects" class="btn-outline">View Projects</a>
+    </div>
+    <div class="hero-stats">
+      <div><span class="stat-num" data-target="4">0</span><span class="stat-lbl">Semester BSIT</span></div>
+      <div><span class="stat-num" data-target="3">0</span><span class="stat-lbl">Certifications</span></div>
+      <div><span class="stat-num" style="font-size:1.1rem;line-height:1.8">Fast</span><span class="stat-lbl">Typing Speed</span></div>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="photo-frame">
+      <div class="photo-frame-ring"></div>
+      <div class="photo-frame-ring2"></div>
+      <div class="photo-inner">
+        <img src="image.png"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="photo-fallback">MA</div>
+      </div>
+    </div>
+    <div class="photo-badge">
+      <div class="photo-badge-name">Muhammad Arkam</div>
+      <div class="photo-badge-sub">BSIT · Virtual University</div>
+      <div class="avail-pill">Available for work</div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="about">
+  <div class="sec-wrap fi">
+    <div class="sec-label">Who I Am</div>
+    <h2 class="sec-title">About <span class="acc">Me</span></h2>
+    <div class="sec-div"></div>
+    <div class="about-grid">
+      <div class="about-text">
+        <p>I'm Muhammad Arkam, a BSIT student at Virtual University of Pakistan (4th Semester) with a strong passion for web development and technology. I hold school-issued certifications in MS Word, MS Excel, and typing speed — proof that I back my skills with real credentials.</p>
+        <p>Currently building web projects through vibe coding and exploring real-world development hands-on. I also bring practical experience from account assistance, store operations, and customer-facing roles in the pharmaceutical sector.</p>
+        <div class="about-tags">
+          <span class="atag">Web Development</span>
+          <span class="atag">Vibe Coding</span>
+          <span class="atag red">MS Office Certified</span>
+          <span class="atag red">Fast Typist</span>
+          <span class="atag">Data Entry</span>
+          <span class="atag">Customer Service</span>
+          <span class="atag red">Sales Coordination</span>
+        </div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-head">
+          <div class="info-head-ava">
+            <img src="https://lh3.googleusercontent.com/pw/AP1GczPO_9x-iO7Be9ohpb9DGUSGwMA_fcm3LqCPp8LPT"
+                 alt="MA"
+                 onerror="this.style.display='none';this.parentElement.textContent='MA'">
+          </div>
+          <div>
+            <div class="info-head-name">Muhammad Arkam</div>
+            <div class="info-head-sub">// bsit_student · lahore.pk</div>
+          </div>
+        </div>
+        <div class="info-row"><span class="info-key">Status</span><span style="display:inline-flex;align-items:center;gap:5px;color:#2ecc71;font-size:.78rem;font-weight:600">● Available</span></div>
+        <div class="info-row"><span class="info-key">Degree</span><span class="info-val">BSIT, Sem 4</span></div>
+        <div class="info-row"><span class="info-key">University</span><span class="info-val">Virtual University</span></div>
+        <div class="info-row"><span class="info-key">Location</span><span class="info-val">Lahore, Pakistan</span></div>
+        <div class="info-row"><span class="info-key">Phone</span><span class="info-val">0341-0419793</span></div>
+        <div class="info-row"><span class="info-key">Email</span><span class="info-val" style="font-size:.72rem">mughalarkam1@gmail.com</span></div>
+        <div class="info-row"><span class="info-key">Languages</span><span class="info-val">Urdu · English</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="skills">
+  <div class="sec-wrap fi">
+    <div class="sec-label" style="color:rgba(231,76,60,0.9)">What I Bring</div>
+    <h2 class="sec-title" style="color:var(--white)">Core <span class="acc">Skills</span></h2>
+    <div class="sec-div"></div>
+    <div class="skills-wrap">
+      <div class="skill-bar-card"><div class="skill-top"><span class="skill-name"><span class="skill-ico">⌨️</span>Typing Speed</span><span class="skill-pct">92%</span></div><div class="skill-track"><div class="skill-fill" style="--w:92%"></div></div><div class="skill-sub">// certified · high accuracy</div></div>
+      <div class="skill-bar-card"><div class="skill-top"><span class="skill-name"><span class="skill-ico">📝</span>MS Word</span><span class="skill-pct">88%</span></div><div class="skill-track"><div class="skill-fill" style="--w:88%"></div></div><div class="skill-sub">// docs · templates · formatting</div></div>
+      <div class="skill-bar-card"><div class="skill-top"><span class="skill-name"><span class="skill-ico">📊</span>MS Excel</span><span class="skill-pct">82%</span></div><div class="skill-track"><div class="skill-fill" style="--w:82%"></div></div><div class="skill-sub">// spreadsheets · formulas · data</div></div>
+      <div class="skill-bar-card"><div class="skill-top"><span class="skill-name"><span class="skill-ico">🌐</span>HTML & CSS</span><span class="skill-pct">60%</span></div><div class="skill-track"><div class="skill-fill" style="--w:60%"></div></div><div class="skill-sub">// building & growing daily</div></div>
+      <div class="skill-bar-card"><div class="skill-top"><span class="skill-name"><span class="skill-ico">🤝</span>Customer Service</span><span class="skill-pct">80%</span></div><div class="skill-track"><div class="skill-fill" style="--w:80%"></div></div><div class="skill-sub">// client communication</div></div>
+      <div class="skill-bar-card"><div class="skill-top"><span class="skill-name"><span class="skill-ico">📋</span>Documentation</span><span class="skill-pct">85%</span></div><div class="skill-track"><div class="skill-fill" style="--w:85%"></div></div><div class="skill-sub">// data entry · record keeping</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="certs">
+  <div class="sec-wrap fi">
+    <div class="sec-label">Credentials</div>
+    <h2 class="sec-title">Certifi<span class="acc">cations</span></h2>
+    <div class="sec-div"></div>
+    <div class="certs-grid">
+      <div class="cert blue-cert">
+        <div class="cert-corner-dec"></div>
+        <span class="cert-glyph">⌨️</span>
+        <div class="cert-badge">✓ Certified</div>
+        <div class="cert-title">Typing Speed Certificate</div>
+        <div class="cert-sub">Exceptional speed and accuracy. School-issued certificate proving keyboard proficiency for data entry and documentation.</div>
+        <div class="cert-issuer">🏫 School Certification</div>
+      </div>
+      <div class="cert red-cert">
+        <div class="cert-corner-dec"></div>
+        <span class="cert-glyph">📝</span>
+        <div class="cert-badge">✓ Certified</div>
+        <div class="cert-title">Microsoft Word Certificate</div>
+        <div class="cert-sub">Certified in document creation, formatting, templates, and professional design for office and academic use.</div>
+        <div class="cert-issuer">🏫 School Certification</div>
+      </div>
+      <div class="cert dark-cert">
+        <span class="cert-glyph">📊</span>
+        <div class="cert-badge">✓ Certified</div>
+        <div class="cert-title">Microsoft Excel Certificate</div>
+        <div class="cert-sub">Certified in spreadsheets, formulas, data entry, and organized data management for professional environments.</div>
+        <div class="cert-issuer">🏫 School Certification</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="projects">
+  <div class="sec-wrap fi">
+    <div class="sec-label" style="color:rgba(231,76,60,0.9)">What I'm Building</div>
+    <h2 class="sec-title" style="color:var(--white)">My <span class="acc">Projects</span></h2>
+    <div class="sec-div"></div>
+    <div class="proj-grid">
+      
+      <div class="proj-card">
+        <div>
+          <div class="proj-kind k-vibe">Vibe Coded</div>
+          <div class="proj-name">Portfolio Website</div>
+          <div class="proj-desc">Personal portfolio showcasing skills, certifications, and experience — built using HTML, CSS & JavaScript with modern design techniques.</div>
+        </div>
+        <div class="proj-pills">
+          <span class="pill">HTML</span><span class="pill">CSS</span><span class="pill">JavaScript</span>
+        </div>
+      </div>
+      
+      <div class="proj-card">
+        <div>
+          <div class="proj-kind k-done">Completed</div>
+          <div class="proj-name">AI Color Detector</div>
+          <div class="proj-desc">A color detector website built using HTML that helps users identify and explore colors using AI configurations.</div>
+        </div>
+        <div>
+          <div class="proj-pills">
+            <span class="pill">HTML</span>
+          </div>
+          <a href="COLOR DETECT.HTML" class="btn-outline" style="display:block; text-align:center; padding:6px 10px; font-size:0.75rem; text-decoration:none; border-radius:6px;">View Project</a>
+        </div>
+      </div>
+      
+      <div class="proj-card">
+        <div>
+          <div class="proj-kind k-wip">In Progress</div>
+          <div class="proj-name">More Projects Coming</div>
+          <div class="proj-desc">Currently deep-diving into web applications and scaling up upcoming utility modules.</div>
+        </div>
+        <div class="proj-pills">
+          <span class="pill">HTML</span><span class="pill">CSS</span><span class="pill">Web Dev</span>
+        </div>
+      </div>
+      
+      
+      
+    </div>
+  </div>
+</section>
+
+<section class="section" id="education">
+  <div class="sec-wrap fi">
+    <div class="sec-label">Academic Journey</div>
+    <h2 class="sec-title">Edu<span class="acc">cation</span></h2>
+    <div class="sec-div"></div>
+    <div class="edu-timeline">
+      <div class="edu-item">
+        <div class="edu-dot"></div>
+        <div class="edu-yr-badge">2024-2028 - Present</div>
+        <div class="edu-deg">BSIT — Bachelor of Science in Information Technology</div>
+        <div class="edu-school">Virtual University of Pakistan · 4th Semester (Active)</div>
+      </div>
+      <div class="edu-item">
+        <div class="edu-dot"></div>
+        <div class="edu-yr-badge">2024</div>
+        <div class="edu-deg">Intermediate (FSc / ICS)</div>
+        <div class="edu-school">Superior Group of Colleges</div>
+      </div>
+      <div class="edu-item">
+        <div class="edu-dot"></div>
+        <div class="edu-yr-badge">2022</div>
+        <div class="edu-deg">Matriculation — Secondary School Certificate</div>
+        <div class="edu-school">Concept Grammar School</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="experience">
+  <div class="sec-wrap fi">
+    <div class="sec-label" style="color:rgba(231,76,60,0.9)">Work Background</div>
+    <h2 class="sec-title" style="color:var(--white)">Experi<span class="acc">ence</span></h2>
+    <div class="sec-div"></div>
+    <div class="exp-list">
+      <div class="exp-item">
+        <div class="exp-num-box">01</div>
+        <div>
+          <div class="exp-role">Account Assistance</div>
+          <div class="exp-desc">Supported daily accounting operations, maintained financial records, assisted with invoicing, and ensured data integrity — leveraging certified MS Office and fast typing skills.</div>
+        </div>
+      </div>
+      <div class="exp-item">
+        <div class="exp-num-box">02</div>
+        <div>
+          <div class="exp-role">Store Operations Workflow</div>
+          <div class="exp-desc">Managed day-to-day store operations including inventory tracking, product coordination, and team workflow management to maintain efficient and smooth operations.</div>
+        </div>
+      </div>
+      <div class="exp-item">
+        <div class="exp-num-box">03</div>
+        <div>
+          <div class="exp-role">Customer Handling & Sales Coordination</div>
+          <div class="exp-desc">Engaged with clients professionally, processed pharmaceutical orders, resolved customer queries, and coordinated with the sales team to meet targets and timelines.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="contact">
+  <div class="sec-wrap fi">
+    <div class="sec-label" style="color:rgba(231,76,60,0.9)">Get In Touch</div>
+    <h2 class="sec-title" style="color:var(--white)">Con<span class="acc">tact</span></h2>
+    <div class="sec-div"></div>
+    <div class="c-wrap">
+      <div class="c-item"><div class="c-icon">✉️</div><div><div class="c-lbl">Email</div><div class="c-val" style="font-size:.78rem">mughalarkam1@gmail.com</div></div></div>
+      <div class="c-item"><div class="c-icon">📱</div><div><div class="c-lbl">Phone / WhatsApp</div><div class="c-val">0341-0419793</div></div></div>
+      <div class="c-item"><div class="c-icon">📍</div><div><div class="c-lbl">Location</div><div class="c-val">Kot Lakhpat, Lahore</div></div></div>
+      <div class="c-item"><div class="c-icon">🎓</div><div><div class="c-lbl">University</div><div class="c-val">Virtual University of Pakistan</div></div></div>
+    </div>
+   
+  </div>
+</section>
+
+<footer>
+  <div class="foot-logo"><span>Arkam</span><span>.</span></div>
+  <div class="foot-copy">© 2026 Muhammad Arkam · All rights reserved</div>
+</footer>
+
+<script>
+/* CURSOR */
+const cur=document.getElementById('cur'),curo=document.getElementById('cur-o');
+let mx=0,my=0,ox=0,oy=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px'});
+(function raf(){ox+=(mx-ox)*.13;oy+=(my-oy)*.13;curo.style.left=ox+'px';curo.style.top=oy+'px';requestAnimationFrame(raf)})();
+document.querySelectorAll('a,button,.skill-bar-card,.cert,.proj-card,.exp-item,.c-item,.atag').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{curo.style.transform='translate(-50%,-50%) scale(1.8)';curo.style.borderColor='rgba(192,57,43,0.9)';cur.style.transform='translate(-50%,-50%) scale(0.3)'});
+  el.addEventListener('mouseleave',()=>{curo.style.transform='translate(-50%,-50%) scale(1)';curo.style.borderColor='rgba(37,99,235,1)';cur.style.transform='translate(-50%,-50%) scale(1)'});
+});
+
+/* SCROLL BAR */
+window.addEventListener('scroll',()=>{
+  document.getElementById('sbar').style.width=(window.scrollY/(document.body.scrollHeight-innerHeight)*100)+'%';
+});
+
+/* TYPING */
+const words=['BSIT Student','Web Developer','Certified Typist','MS Office Expert','Vibe Coder'];
+let wi=0,ci=0,del=false;
+const tel=document.getElementById('typed');
+function typeIt(){
+  const w=words[wi];
+  if(!del){tel.textContent=w.slice(0,++ci);if(ci===w.length){setTimeout(()=>{del=true;setTimeout(typeIt,80)},2000);return;}setTimeout(typeIt,90)}
+  else{tel.textContent=w.slice(0,--ci);if(ci===0){del=false;wi=(wi+1)%words.length;setTimeout(typeIt,400);return;}setTimeout(typeIt,48)}
+}
+setTimeout(typeIt,800);
+
+/* FADE IN */
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.classList.add('vis');
+      e.target.querySelectorAll('.skill-fill').forEach(b=>b.classList.add('go'));
+    }
+  });
+},{threshold:0.1});
+document.querySelectorAll('.fi').forEach(el=>obs.observe(el));
+
+/* SKILL BARS on scroll */
+const sobs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.querySelectorAll('.skill-fill').forEach(b=>b.classList.add('go'))});
+},{threshold:0.2});
+document.querySelectorAll('#skills .sec-wrap').forEach(el=>sobs.observe(el));
+
+/* COUNTER */
+const cobs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting&&e.target.dataset.target){
+      const target=+e.target.dataset.target,dur=1200,step=dur/target;
+      let n=0;
+      const t=setInterval(()=>{n=Math.min(n+1,target);e.target.textContent=n+(n===4?'th':'+');if(n===target)clearInterval(t)},step);
+      cobs.unobserve(e.target);
+    }
+  });
+},{threshold:.5});
+document.querySelectorAll('[data-target]').forEach(el=>cobs.observe(el));
+
+/* TILT */
+document.querySelectorAll('.cert,.proj-card').forEach(c=>{
+  c.addEventListener('mousemove',e=>{
+    const r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+    c.style.transform=`translateY(-5px) rotateX(${-y*8}deg) rotateY(${x*8}deg)`;
+    c.style.transition='none';
+  });
+  c.addEventListener('mouseleave',()=>{c.style.transform='';c.style.transition=''});
+});
+
+/* SMOOTH NAV */
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{e.preventDefault();document.querySelector(a.getAttribute('href'))?.scrollIntoView({behavior:'smooth'})});
+});
+</script>
+</body>
+</html>

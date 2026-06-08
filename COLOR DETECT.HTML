@@ -1,0 +1,709 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ColorSense — Color Detector</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#030307;
+  --s1:#090915;
+  --s2:#111126;
+  --s3:#171734;
+  --border:rgba(255,255,255,0.05);
+  --border2:rgba(255,255,255,0.1);
+  --text:#f1f1f9;
+  --muted:#7676a3;
+  --dim:#42426e;
+  --accent:#7c4dff;
+  --accent-glow:rgba(124,77,255,0.4);
+}
+html,body{height:100%;overflow-x:hidden}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+
+/* HEADER */
+header{display:flex;align-items:center;gap:16px;padding:1.2rem 2rem;border-bottom:1px solid var(--border);background:rgba(3,3,7,.85);backdrop-filter:blur(20px);position:sticky;top:0;z-index:100}
+.logo-ring{width:28px;height:28px;border-radius:50%;background:conic-gradient(from 180deg at 50% 50%, #7c4dff, #00e5ff, #00e676, #ff3d00, #7c4dff);flex-shrink:0;animation:spin 4s linear infinite;box-shadow:0 0 15px rgba(124,77,255,0.3)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.logo-text{font-size:1.3rem;font-weight:700;letter-spacing:-.03em;background:linear-gradient(135deg,#fff 30%,#b39ddb);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo-sub{font-size:.65rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-top:2px}
+.status-pill{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:.7rem;font-family:'JetBrains Mono',monospace;color:var(--muted);padding:6px 14px;border:1px solid var(--border2);border-radius:30px;background:rgba(255,255,255,0.02)}
+.status-pill .dot{width:6px;height:6px;border-radius:50%;background:#ff1744;flex-shrink:0}
+.status-pill.live{border-color:rgba(0,230,118,0.2);color:#00e676}
+.status-pill.live .dot{background:#00e676;box-shadow:0 0 10px #00e676;animation:blink 1.5s ease infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* LAYOUT */
+.layout{flex:1;display:grid;grid-template-columns:1fr 380px;gap:1.5rem;max-width:1280px;width:100%;margin:0 auto;padding:2rem 2rem 3rem}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.sidebar{order:-1}}
+
+/* CAMERA */
+.cam-section{display:flex;flex-direction:column;gap:1.2rem}
+.cam-wrap{position:relative;border-radius:24px;overflow:hidden;background:var(--s1);border:1px solid var(--border);aspect-ratio:4/3;cursor:none;user-select:none;box-shadow:0 20px 40px rgba(0,0,0,0.4)}
+.cam-wrap.live{border-color:rgba(124,77,255,.3);box-shadow:0 0 30px rgba(124,77,255,0.05), 0 20px 40px rgba(0,0,0,0.4)}
+#video{width:100%;height:100%;object-fit:cover;display:block;border-radius:24px}
+#offscreen{display:none}
+
+/* Custom cursor */
+#cur{position:absolute;pointer-events:none;display:none;z-index:20;transform:translate(-50%,-50%)}
+.cur-ring{width:44px;height:44px;border:1.5px solid rgba(255,255,255,.9);border-radius:50%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);box-shadow:0 0 10px rgba(0,0,0,0.5)}
+.cur-dot{width:4px;height:4px;background:#fff;border-radius:50%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+.cur-lh{position:absolute;width:16px;height:1px;background:rgba(255,255,255,.6);top:50%;left:50%;transform:translate(-50%,-50%)}
+.cur-lv{position:absolute;width:1px;height:16px;background:rgba(255,255,255,.6);top:50%;left:50%;transform:translate(-50%,-50%)}
+
+/* Tooltip bubble */
+#bubble{position:absolute;pointer-events:none;display:none;z-index:21;background:rgba(5,5,15,.92);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:8px 14px;font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--text);box-shadow:0 10px 25px rgba(0,0,0,0.5);backdrop-filter:blur(12px)}
+#bswatch{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:middle;margin-right:8px;border:1px solid rgba(255,255,255,0.25)}
+
+/* Magnifier */
+#mag{position:absolute;pointer-events:none;width:110px;height:110px;border-radius:50%;border:3px solid #fff;overflow:hidden;display:none;z-index:22;box-shadow:0 15px 35px rgba(0,0,0,0.7)}
+#magc{width:100%;height:100%;display:block;image-rendering:pixelated}
+
+/* Frozen badge */
+#fbadge{display:none;position:absolute;top:20px;left:20px;z-index:30;background:rgba(255,23,68,0.95);color:#fff;font-size:.7rem;font-family:'JetBrains Mono',monospace;font-weight:700;padding:6px 14px;border-radius:30px;letter-spacing:.05em;box-shadow:0 4px 15px rgba(255,23,68,0.4)}
+
+/* Permission screen */
+#perm{position:absolute;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2rem;background:var(--s1);padding:3rem;text-align:center;border-radius:24px}
+.perm-icon{width:84px;height:84px;border-radius:28px;background:var(--s2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:38px;box-shadow:0 10px 20px rgba(0,0,0,0.2)}
+#perm h2{font-size:1.4rem;font-weight:700;letter-spacing:-0.02em}
+#perm p{font-size:.9rem;color:var(--muted);max-width:280px;line-height:1.6}
+#perr{color:#ff5252;font-size:.8rem;display:none;max-width:320px;line-height:1.5;background:rgba(255,82,82,0.1);padding:10px 16px;border-radius:10px;border:1px solid rgba(255,82,82,0.2)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:.7rem 1.4rem;border-radius:12px;font-family:'Space Grotesk',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;border:none;transition:all .2s cubic-bezier(0.4, 0, 0.2, 1);white-space:nowrap}
+.btn:active{transform:scale(.95)}
+.btn-accent{background:linear-gradient(135deg, var(--accent), #651fff);color:#fff;box-shadow:0 4px 15px var(--accent-glow)}
+.btn-accent:hover{background:linear-gradient(135deg, #8c61ff, #7c4dff);box-shadow:0 6px 20px var(--accent-glow);transform:translateY(-1px)}
+.btn-ghost{background:var(--s2);color:var(--text);border:1px solid var(--border2)}
+.btn-ghost:hover{background:var(--s3);border-color:rgba(255,255,255,0.2);transform:translateY(-1px)}
+.btn-red{background:rgba(255,23,68,0.06);color:#ff5252;border:1px solid rgba(255,23,68,0.25)}
+.btn-red:hover{background:rgba(255,23,68,0.15);border-color:#ff1744;transform:translateY(-1px)}
+.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.hint-txt{font-size:.75rem;color:var(--muted);margin-left:auto;font-family:'JetBrains Mono',monospace;background:var(--s1);padding:6px 14px;border-radius:30px;border:1px solid var(--border)}
+
+/* SIDEBAR */
+.sidebar{display:flex;flex-direction:column;gap:1.2rem}
+
+/* Color card */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:24px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.2)}
+.swatch{height:150px;background:#555;transition:background .15s cubic-bezier(0.4, 0, 0.2, 1);position:relative;display:flex;align-items:flex-end;padding:16px 20px}
+.swatch::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,0.4));pointer-events:none}
+.cname{background:rgba(3,3,7,0.75);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.1);color:#fff;font-size:.8rem;font-weight:600;padding:6px 16px;border-radius:30px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-shadow:0 4px 15px rgba(0,0,0,0.25);z-index:2}
+.vals{padding:1.2rem;display:flex;flex-direction:column;gap:4px}
+.vrow{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.vrow:last-child{border-bottom:none}
+.vlbl{font-size:.65rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:.12em;width:42px;flex-shrink:0}
+.vval{font-family:'JetBrains Mono',monospace;font-size:.82rem;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cbtn{background:rgba(255,255,255,0.02);border:1px solid var(--border2);color:var(--muted);border-radius:8px;padding:5px 10px;font-size:.68rem;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all .2s;flex-shrink:0}
+.cbtn:hover{color:var(--text);border-color:rgba(255,255,255,0.25);background:var(--s2)}
+.cbtn.ok{color:#00e676;border-color:rgba(0,230,118,0.3);background:rgba(0,230,118,0.05)}
+
+/* Channels */
+.channels{background:var(--s1);border:1px solid var(--border);border-radius:24px;padding:1.4rem;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 30px rgba(0,0,0,0.2)}
+.ch{display:flex;align-items:center;gap:12px}
+.chl{font-size:.7rem;font-weight:700;font-family:'JetBrains Mono',monospace;width:14px;text-align:center;flex-shrink:0}
+.chl.r{color:#ff5252}.chl.g{color:#00e676}.chl.b{color:#40c4ff}
+.cht{flex:1;height:6px;border-radius:3px;background:var(--s3);overflow:hidden;position:relative}
+.chf{height:100%;border-radius:3px;transition:width .1s cubic-bezier(0.4, 0, 0.2, 1)}
+.chf.r{background:linear-gradient(90deg, #ff1744, #ff5252);box-shadow:0 0 8px rgba(255,82,82,0.4)}
+.chf.g{background:linear-gradient(90deg, #00e676, #69f0ae);box-shadow:0 0 8px rgba(105,240,174,0.4)}
+.chf.b{background:linear-gradient(90deg, #2979ff, #40c4ff);box-shadow:0 0 8px rgba(64,196,255,0.4)}
+.chn{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted);width:30px;text-align:right;flex-shrink:0}
+
+/* Contrast */
+.contrast{background:var(--s1);border:1px solid var(--border);border-radius:24px;padding:1.4rem;display:flex;align-items:center;gap:16px;box-shadow:0 10px 30px rgba(0,0,0,0.2)}
+.cdots{display:flex;flex-direction:column;gap:6px;flex-shrink:0}
+.cdot{width:40px;height:30px;border-radius:8px;border:1px solid var(--border2);transition:background .15s}
+.cdot:last-child{box-shadow:inset 0 0 10px rgba(0,0,0,0.1)}
+.cratio{font-family:'JetBrains Mono',monospace;font-size:1.4rem;font-weight:700;line-height:1;letter-spacing:-0.02em}
+.csub{font-size:.72rem;color:var(--muted);margin-top:4px}
+.wpill{display:inline-flex;align-items:center;font-size:.65rem;font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:.05em;padding:4px 12px;border-radius:30px;margin-top:8px}
+.waaa{background:rgba(0,230,118,0.1);color:#00e676;border:1px solid rgba(0,230,118,0.25);box-shadow:0 2px 10px rgba(0,230,118,0.1)}
+.waa{background:rgba(41,121,255,0.1);color:#40c4ff;border:1px solid rgba(41,121,255,0.25);box-shadow:0 2px 10px rgba(41,121,255,0.1)}
+.wfail{background:rgba(255,23,68,0.1);color:#ff5252;border:1px solid rgba(255,23,68,0.25);box-shadow:0 2px 10px rgba(255,23,68,0.1)}
+
+/* History */
+.history{background:var(--s1);border:1px solid var(--border);border-radius:24px;padding:1.4rem;box-shadow:0 10px 30px rgba(0,0,0,0.2)}
+.hhdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.htitle{font-size:.68rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:.12em;text-transform:uppercase}
+.hclear{background:none;border:none;color:var(--dim);font-size:.68rem;font-family:'JetBrains Mono',monospace;font-weight:600;cursor:pointer;transition:color .2s;padding:0}
+.hclear:hover{color:#ff5252}
+.hgrid{display:flex;flex-wrap:wrap;gap:8px}
+.hs{width:38px;height:38px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);cursor:pointer;transition:transform .2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow .2s, border-color .2s;position:relative;flex-shrink:0}
+.hs:hover{transform:scale(1.25) translateY(-3px);box-shadow:0 10px 20px rgba(0,0,0,0.6);border-color:rgba(255,255,255,0.3);z-index:5}
+.htip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#05050f;border:1px solid var(--border2);color:var(--text);font-size:.65rem;font-family:'JetBrains Mono',monospace;padding:4px 10px;border-radius:8px;white-space:nowrap;display:none;pointer-events:none;z-index:99;box-shadow:0 5px 15px rgba(0,0,0,0.4)}
+.hs:hover .htip{display:block}
+.hempty{font-size:.8rem;color:var(--dim);font-style:italic}
+
+/* Ripple */
+.ripple{position:absolute;pointer-events:none;width:60px;height:60px;border-radius:50%;border:2px solid rgba(255,255,255,0.85);box-shadow:0 0 15px rgba(255,255,255,0.3);animation:rout .45s cubic-bezier(0.1, 0.8, 0.3, 1) forwards}
+@keyframes rout{0%{transform:translate(-50%,-50%) scale(.2);opacity:1}100%{transform:translate(-50%,-50%) scale(2.5);opacity:0}}
+
+/* Debug overlay */
+#dbg{position:absolute;bottom:14px;right:16px;z-index:40;font-family:'JetBrains Mono',monospace;font-size:.65rem;font-weight:700;color:rgba(255,255,255,.3);pointer-events:none;text-align:right;display:none;background:rgba(0,0,0,0.4);padding:2px 8px;border-radius:4px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-ring"></div>
+  <div>
+    <div class="logo-text">ColorSense</div>
+    <div class="logo-sub">Color Detector</div>
+  </div>
+  <div class="status-pill" id="status"><span class="dot"></span><span id="stxt">OFFLINE</span></div>
+</header>
+
+<div class="layout">
+  <div class="cam-section">
+    <div class="cam-wrap" id="camWrap">
+      <video id="video" autoplay playsinline muted></video>
+      <canvas id="offscreen"></canvas>
+
+      <div id="cur">
+        <div class="cur-ring"></div>
+        <div class="cur-lh"></div>
+        <div class="cur-lv"></div>
+        <div class="cur-dot"></div>
+      </div>
+
+      <div id="bubble"><span id="bswatch"></span><span id="bhex">#888888</span></div>
+
+      <div id="mag"><canvas id="magc" width="96" height="96"></canvas></div>
+
+      <div id="fbadge">● FROZEN</div>
+      <div id="dbg" style="display:block"></div>
+
+      <div id="perm">
+        <div class="perm-icon">📷</div>
+        <h2>Allow Camera Access</h2>
+        <p>Click the button below and allow camera permission in your browser popup.</p>
+        <button class="btn btn-accent" onclick="startCamera()">🎥 Start Camera</button>
+        <p id="perr"></p>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-ghost" id="fzbtn" onclick="toggleFreeze()">⏸ Freeze</button>
+      <button class="btn btn-ghost" id="swbtn" style="display:none" onclick="switchCam()">🔄 Flip</button>
+      <button class="btn btn-red" onclick="clearHistory()">🗑 Clear</button>
+      <span class="hint-txt" id="hint">Move over video · Click to save</span>
+    </div>
+  </div>
+
+  <div class="sidebar">
+
+    <div class="card">
+      <div class="swatch" id="swatch">
+        <span class="cname" id="cname">— Hover over the camera —</span>
+      </div>
+      <div class="vals">
+        <div class="vrow"><span class="vlbl">HEX</span><span class="vval" id="vhex">#888888</span><button class="cbtn" onclick="cp('vhex',this)">copy</button></div>
+        <div class="vrow"><span class="vlbl">RGB</span><span class="vval" id="vrgb">rgb(136, 136, 136)</span><button class="cbtn" onclick="cp('vrgb',this)">copy</button></div>
+        <div class="vrow"><span class="vlbl">HSL</span><span class="vval" id="vhsl">hsl(0, 0%, 53%)</span><button class="cbtn" onclick="cp('vhsl',this)">copy</button></div>
+        <div class="vrow"><span class="vlbl">CMYK</span><span class="vval" id="vcmyk">0%, 0%, 0%, 47%</span><button class="cbtn" onclick="cp('vcmyk',this)">copy</button></div>
+      </div>
+    </div>
+
+    <div class="channels">
+      <div class="ch"><span class="chl r">R</span><div class="cht"><div class="chf r" id="fr" style="width:53%"></div></div><span class="chn" id="nr">136</span></div>
+      <div class="ch"><span class="chl g">G</span><div class="cht"><div class="chf g" id="fg" style="width:53%"></div></div><span class="chn" id="ng">136</span></div>
+      <div class="ch"><span class="chl b">B</span><div class="cht"><div class="chf b" id="fb" style="width:53%"></div></div><span class="chn" id="nb">136</span></div>
+    </div>
+
+    <div class="contrast">
+      <div class="cdots">
+        <div class="cdot" id="cd1" style="background:#888"></div>
+        <div class="cdot" style="background:#fff"></div>
+      </div>
+      <div>
+        <div class="cratio" id="cr">—</div>
+        <div class="csub">vs white · contrast ratio</div>
+        <div class="wpill wfail" id="wp">—</div>
+      </div>
+    </div>
+
+    <div class="history">
+      <div class="hhdr">
+        <span class="htitle">Saved Colors</span>
+        <button class="hclear" onclick="clearHistory()">clear all</button>
+      </div>
+      <div class="hgrid" id="hgrid"><span class="hempty">Click on video to save colors</span></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── DOM refs ──
+const video   = document.getElementById('video');
+const ofc     = document.getElementById('offscreen');
+const octx    = ofc.getContext('2d', {willReadFrequently: true});
+const camWrap = document.getElementById('camWrap');
+const cur     = document.getElementById('cur');
+const bubble  = document.getElementById('bubble');
+const bswatch = document.getElementById('bswatch');
+const bhex    = document.getElementById('bhex');
+const mag     = document.getElementById('mag');
+const magc    = document.getElementById('magc');
+const mctx    = magc.getContext('2d', {willReadFrequently: true});
+const perm    = document.getElementById('perm');
+const perr    = document.getElementById('perr');
+const status  = document.getElementById('status');
+const stxt    = document.getElementById('stxt');
+const fzbtn   = document.getElementById('fzbtn');
+const swbtn   = document.getElementById('swbtn');
+const fbadge  = document.getElementById('fbadge');
+const dbg     = document.getElementById('dbg');
+
+// ── State ──
+let mediaStream = null;
+let frozen      = false;
+let snap        = null;       
+let facingMode  = 'environment';
+let history     = [];
+let ready       = false;      
+
+// ── EXPANDED COLOR DICTIONARY (140+ targeted naming combinations) ──
+const NAMED = [
+  /* REDS & CRIMSONS */
+  [255,0,0,'Pure Red'],[220,20,60,'Crimson Red'],[178,34,34,'Firebrick Red'],[139,0,0,'Dark Red'],
+  [255,69,0,'Orange Red'],[255,99,71,'Tomato Red'],[255,127,80,'Coral Pink'],[255,51,51,'Vibrant Coral'],
+  [250,128,114,'Salmon Pink'],[233,150,122,'Dark Salmon'],[255,160,122,'Light Salmon'],
+  [128,0,0,'Maroon'],[150,0,24,'Carmine Red'],[166,44,43,'Rust Red'],[112,28,28,'Blood Red'],
+  [255,92,141,'Watermelon Red'],
+
+  /* ORANGES & AMBERS */
+  [255,140,0,'Dark Orange'],[255,165,0,'Orange'],[255,200,0,'Amber Gold'],[244,164,96,'Sandy Brown'],
+  [210,105,30,'Chocolate Orange'],[255,110,0,'Neon Orange'],[255,179,71,'Mellow Apricot'],
+  [255,153,51,'Mandarin Orange'],[204,102,0,'Burnt Orange'],
+
+  /* YELLOWS, CREAMS & KHAKIS */
+  [255,215,0,'Bright Gold'],[255,255,0,'Pure Yellow'],[240,230,140,'Khaki Yellow'],
+  [189,183,107,'Dark Khaki'],[255,255,153,'Canary Yellow'],[255,253,208,'Cream White'],
+  [255,239,213,'Papaya Whip'],[255,245,230,'Soft Alabaster'],[250,250,210,'Light Goldenrod'],
+  [212,175,55,'Metallic Gold'],[238,220,130,'Mustard Yellow'],[218,165,32,'Goldenrod'],
+
+  /* GREENS & LIME SHADES */
+  [173,255,47,'Green Yellow'],[127,255,0,'Chartreuse Green'],[0,255,0,'Pure Lime Green'],
+  [50,205,50,'Lime Tree Green'],[144,238,144,'Light Mint Green'],[0,250,154,'Medium Spring Green'],
+  [0,255,127,'Spring Green'],[60,179,113,'Medium Sea Green'],[46,139,87,'Sea Green'],
+  [34,139,34,'Forest Green'],[0,128,0,'Standard Green'],[0,100,0,'Dark Forest Green'],
+  [85,107,47,'Dark Olive Green'],[107,142,35,'Olive Drab'],[128,128,0,'Olive Green'],
+  [152,251,152,'Pale Green'],[32,178,170,'Light Sea Green'],[0,255,163,'Electric Mint'],
+  [0,122,94,'Emerald Green'],[46,80,60,'Hunter Green'],[168,228,160,'Sage Green'],
+
+  /* CYANS & TURQUOISES */
+  [0,255,255,'Cyan / Aqua'],[0,206,209,'Dark Turquoise'],[64,224,208,'Turquoise Blue'],
+  [0,139,139,'Dark Cyan'],[0,128,128,'Deep Teal'],[72,209,204,'Medium Turquoise'],
+  [175,238,238,'Pale Turquoise'],[224,255,255,'Light Cyan'],[0,168,181,'Cerulean Blue'],
+
+  /* BLUES & OCEAN SHADES */
+  [173,216,230,'Light Ice Blue'],[135,206,235,'Sky Blue'],[135,206,250,'Light Sky Blue'],
+  [70,130,180,'Steel Blue'],[100,149,237,'Cornflower Blue'],[30,144,255,'Dodger Blue'],
+  [0,191,255,'Deep Sky Blue'],[0,0,255,'Pure Electric Blue'],[0,0,205,'Medium Blue'],
+  [0,0,139,'Dark Cobalt Blue'],[0,0,128,'Navy Blue'],[25,25,112,'Midnight Blue'],
+  [65,105,225,'Royal Blue'],[176,196,222,'Light Steel Blue'],[30,30,96,'Deep Space Blue'],
+  [115,147,179,'Glaucous Blue'],[15,82,186,'Sapphire Blue'],[74,85,162,'Indigo Blue'],
+
+  /* PURPLES & VIOLETS */
+  [106,90,205,'Slate Blue-Purple'],[72,61,139,'Dark Slate Purple'],[147,112,219,'Medium Purple'],
+  [138,43,226,'Blue Violet'],[148,0,211,'Dark Violet'],[153,50,204,'Dark Orchid'],
+  [128,0,128,'Plum Purple'],[139,0,139,'Dark Magenta'],[186,85,211,'Medium Orchid'],
+  [218,112,214,'Orchid Pink'],[238,130,238,'Light Violet'],[255,0,255,'Fuchsia / Magenta'],
+  [75,0,130,'Indigo Purple'],[230,230,250,'Lavender Gray'],[216,191,216,'Thistle Purple'],
+  [102,0,153,'Cyber Purple'],[46,26,71,'Deep Aubergine'],
+
+  /* PINKS */
+  [255,20,147,'Deep Hot Pink'],[255,105,180,'Hot Pink'],[255,182,193,'Light Rose Pink'],
+  [255,192,203,'Soft Pink'],[244,194,194,'Baby Pink'],[255,115,165,'Bubblegum Pink'],
+  [218,160,181,'Dusty Rose'],[224,17,95,'Ruby Pink'],
+
+  /* BROWNS & TAN SHADES */
+  [210,180,140,'Tan Sand'],[245,222,179,'Wheat Brown'],[255,228,196,'Bisque Cream'],
+  [255,218,185,'Peach Puff'],[255,222,173,'Navajo Orange-Brown'],[188,143,143,'Rosy Earth Brown'],
+  [205,92,92,'Indian Terracotta'],[205,133,63,'Peru Orange-Brown'],[160,82,45,'Sienna Sienna'],
+  [139,69,19,'Saddle Brown'],[101,67,33,'Dark Espresso Brown'],[222,184,135,'Burlywood'],
+  [123,63,0,'Bronze Brown'],[92,64,51,'Dark Walnut'],[210,140,109,'Desert Clay'],
+
+  /* MONOCHROMES, GRAYS & METALLICS */
+  [255,255,255,'Pure Cosmic White'],[245,245,245,'White Smoke'],[240,248,255,'Alice Blue-White'],
+  [240,255,240,'Honeydew White'],[245,245,220,'Beige Stone'],[253,245,230,'Old Lace Pearl'],
+  [0,0,0,'Pure Obsidian Black'],[15,15,20,'Pitch Dark Charcoal'],[30,30,35,'Abyss Gray'],
+  [47,79,79,'Dark Slate Gray'],[105,105,105,'Dim Gunmetal Gray'],[128,128,128,'Neutral Gray'],
+  [169,169,169,'Dark Silver Gray'],[192,192,192,'Bright Silver Metallic'],[211,211,211,'Light Ash Gray'],
+  [220,220,220,'Gainsboro Gray'],[112,128,144,'Slate Gray'],[119,136,153,'Light Slate Gray'],
+  [53,57,62,'Asphalt Dark'],[20,24,30,'Deep Onyx']
+];
+
+function nearestName(r,g,b){
+  let best='Unknown', min=Infinity;
+  for(const [cr,cg,cb,cn] of NAMED){
+    const d=(r-cr)**2+(g-cg)**2+(b-cb)**2;
+    if(d<min){min=d;best=cn}
+  }
+  return best;
+}
+
+// ── Color math ──
+function toHex(r,g,b){
+  return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+}
+
+function toHSL(r,g,b){
+  let rn=r/255,gn=g/255,bn=b/255;
+  const mx=Math.max(rn,gn,bn),mn=Math.min(rn,gn,bn);
+  let h=0,s=0,l=(mx+mn)/2;
+  if(mx!==mn){
+    const d=mx-mn;
+    s=l>.5?d/(2-mx-mn):d/(mx+mn);
+    if(mx===rn) h=((gn-bn)/d+(gn<bn?6:0))/6;
+    else if(mx===gn) h=((bn-rn)/d+2)/6;
+    else h=((rn-gn)/d+4)/6;
+  }
+  return `hsl(${Math.round(h*360)}, ${Math.round(s*100)}%, ${Math.round(l*100)}%)`;
+}
+
+function toCMYK(r,g,b){
+  const rn=r/255,gn=g/255,bn=b/255;
+  const k=1-Math.max(rn,gn,bn);
+  if(k>=1) return '0%, 0%, 0%, 100%';
+  const c=(1-rn-k)/(1-k),m=(1-gn-k)/(1-k),y=(1-bn-k)/(1-k);
+  return `${Math.round(c*100)}%, ${Math.round(m*100)}%, ${Math.round(y*100)}%, ${Math.round(k*100)}%`;
+}
+
+function luminance(r,g,b){
+  return [r,g,b].reduce((sum,v,i)=>{
+    v/=255;
+    v=v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4);
+    return sum+v*[.2126,.7152,.0722][i];
+  },0);
+}
+
+function contrastVsWhite(r,g,b){
+  const lc=luminance(r,g,b), lw=1;
+  return (lw+.05)/(lc+.05);
+}
+
+// ── Update all UI elements ──
+function updateUI(r,g,b){
+  const hex=toHex(r,g,b);
+  document.getElementById('swatch').style.background=hex;
+  document.getElementById('cname').textContent=nearestName(r,g,b);
+  document.getElementById('vhex').textContent=hex;
+  document.getElementById('vrgb').textContent=`rgb(${r}, ${g}, ${b})`;
+  document.getElementById('vhsl').textContent=toHSL(r,g,b);
+  document.getElementById('vcmyk').textContent=toCMYK(r,g,b);
+  document.getElementById('fr').style.width=(r/255*100)+'%';
+  document.getElementById('fg').style.width=(g/255*100)+'%';
+  document.getElementById('fb').style.width=(b/255*100)+'%';
+  document.getElementById('nr').textContent=r;
+  document.getElementById('ng').textContent=g;
+  document.getElementById('nb').textContent=b;
+  document.getElementById('cd1').style.background=hex;
+  const ratio=contrastVsWhite(r,g,b);
+  document.getElementById('cr').textContent=ratio.toFixed(2)+':1';
+  const wp=document.getElementById('wp');
+  if(ratio>=7){wp.textContent='AAA ✓';wp.className='wpill waaa'}
+  else if(ratio>=4.5){wp.textContent='AA ✓';wp.className='wpill waa'}
+  else{wp.textContent='Fail ✗';wp.className='wpill wfail'}
+  bswatch.style.background=hex;
+  bhex.textContent=hex;
+}
+
+// ── Correct pixel mapping for object-fit:cover ──
+function getVideoRegion(){
+  const vw=video.videoWidth, vh=video.videoHeight;
+  const dw=camWrap.clientWidth, dh=camWrap.clientHeight;
+  if(!vw||!vh||!dw||!dh) return null;
+  const vAR=vw/vh, dAR=dw/dh;
+  let sx,sy,sw,sh;
+  if(vAR>dAR){
+    sh=vh; sw=vh*dAR; sy=0; sx=(vw-sw)/2;
+  } else {
+    sw=vw; sh=vw/dAR; sx=0; sy=(vh-sh)/2;
+  }
+  return {sx,sy,sw,sh,vw,vh};
+}
+
+function samplePixel(nx,ny){
+  if(!ready) return [136,136,136];
+  if(frozen && snap){
+    const reg=getVideoRegion();
+    if(!reg) return [136,136,136];
+    const px=Math.floor(reg.sx + nx*reg.sw);
+    const py=Math.floor(reg.sy + ny*reg.sh);
+    const idx=(Math.min(py,reg.vh-1)*reg.vw + Math.min(px,reg.vw-1))*4;
+    return [snap.data[idx], snap.data[idx+1], snap.data[idx+2]];
+  }
+  const reg=getVideoRegion();
+  if(!reg) return [136,136,136];
+  const px=Math.floor(reg.sx + nx*reg.sw);
+  const py=Math.floor(reg.sy + ny*reg.sh);
+
+  ofc.width=1; ofc.height=1;
+  try{
+    octx.drawImage(video, px, py, 1, 1, 0, 0, 1, 1);
+    const d=octx.getImageData(0,0,1,1).data;
+    if(d[3]===0) return [136,136,136]; 
+    return [d[0],d[1],d[2]];
+  } catch(e){
+    return [136,136,136];
+  }
+}
+
+function drawMagnifier(nx,ny){
+  if(!ready) return;
+  const reg=getVideoRegion();
+  if(!reg) return;
+  const px=reg.sx + nx*reg.sw;
+  const py=reg.sy + ny*reg.sh;
+  const zoom=18; 
+
+  magc.width=96; magc.height=96;
+  mctx.imageSmoothingEnabled=false;
+  try{
+    if(frozen && snap){
+      const tmp=document.createElement('canvas');
+      tmp.width=reg.vw; tmp.height=reg.vh;
+      tmp.getContext('2d').putImageData(snap,0,0);
+      mctx.drawImage(tmp, px-zoom/2, py-zoom/2, zoom, zoom, 0,0, 96, 96);
+    } else {
+      mctx.drawImage(video, px-zoom/2, py-zoom/2, zoom, zoom, 0,0, 96, 96);
+    }
+    mctx.strokeStyle='rgba(255,255,255,.75)';
+    mctx.lineWidth=1;
+    mctx.strokeRect(44,44,8,8);
+  } catch(e){}
+}
+
+// ── Mouse interaction ──
+camWrap.addEventListener('mouseenter',()=>{
+  if(!ready) return;
+  cur.style.display='block';
+  bubble.style.display='block';
+  mag.style.display='block';
+});
+
+camWrap.addEventListener('mouseleave',()=>{
+  cur.style.display='none';
+  bubble.style.display='none';
+  mag.style.display='none';
+  document.getElementById('hint').textContent='Move over video · Click to save';
+});
+
+camWrap.addEventListener('mousemove',e=>{
+  if(!ready) return;
+  const rect=camWrap.getBoundingClientRect();
+  const mx=e.clientX-rect.left;
+  const my=e.clientY-rect.top;
+  const nx=Math.max(0,Math.min(1,mx/rect.width));
+  const ny=Math.max(0,Math.min(1,my/rect.height));
+
+  cur.style.left=mx+'px';
+  cur.style.top=my+'px';
+
+  let magX=mx+68, magY=my-68-96;
+  if(magX+96>rect.width) magX=mx-68-96;
+  if(magY<0) magY=my+68;
+  if(magX<0) magX=4;
+  mag.style.left=magX+'px';
+  mag.style.top=magY+'px';
+
+  let bx=mx+18, by=my-14;
+  if(bx+140>rect.width) bx=mx-158;
+  if(by<0) by=4;
+  bubble.style.left=bx+'px';
+  bubble.style.top=by+'px';
+
+  const [r,g,b]=samplePixel(nx,ny);
+  updateUI(r,g,b);
+  drawMagnifier(nx,ny);
+  document.getElementById('hint').textContent=`x:${Math.round(mx)}  y:${Math.round(my)}`;
+});
+
+camWrap.addEventListener('click',e=>{
+  if(!ready) return;
+  const rect=camWrap.getBoundingClientRect();
+  const nx=(e.clientX-rect.left)/rect.width;
+  const ny=(e.clientY-rect.top)/rect.height;
+  const [r,g,b]=samplePixel(nx,ny);
+  updateUI(r,g,b);
+  addHistory(r,g,b);
+  spawnRipple(e.clientX-rect.left, e.clientY-rect.top);
+});
+
+// ── Touch ──
+camWrap.addEventListener('touchstart',e=>{e.preventDefault();},{passive:false});
+camWrap.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(!ready) return;
+  const t=e.touches[0];
+  const rect=camWrap.getBoundingClientRect();
+  const nx=Math.max(0,Math.min(1,(t.clientX-rect.left)/rect.width));
+  const ny=Math.max(0,Math.min(1,(t.clientY-rect.top)/rect.height));
+  const [r,g,b]=samplePixel(nx,ny);
+  updateUI(r,g,b);
+},{passive:false});
+
+camWrap.addEventListener('touchend',e=>{
+  if(!ready) return;
+  const t=e.changedTouches[0];
+  const rect=camWrap.getBoundingClientRect();
+  const nx=Math.max(0,Math.min(1,(t.clientX-rect.left)/rect.width));
+  const ny=Math.max(0,Math.min(1,(t.clientY-rect.top)/rect.height));
+  const [r,g,b]=samplePixel(nx,ny);
+  updateUI(r,g,b);
+  addHistory(r,g,b);
+});
+
+// ── Ripple ──
+function spawnRipple(x,y){
+  const el=document.createElement('div');
+  el.className='ripple';
+  el.style.left=x+'px';
+  el.style.top=y+'px';
+  camWrap.appendChild(el);
+  el.addEventListener('animationend',()=>el.remove());
+}
+
+// ── History ──
+function addHistory(r,g,b){
+  const hex=toHex(r,g,b);
+  if(history[0]===hex) return;
+  history.unshift(hex);
+  if(history.length>16) history.pop();
+  renderHistory();
+}
+
+function renderHistory(){
+  const grid=document.getElementById('hgrid');
+  if(!history.length){
+    grid.innerHTML='<span class="hempty">Click on video to save colors</span>';
+    return;
+  }
+  grid.innerHTML=history.map(h=>
+    `<div class="hs" style="background:${h}" onclick="loadHist('${h}')"><span class="htip">${h}</span></div>`
+  ).join('');
+}
+
+function loadHist(hex){
+  const r=parseInt(hex.slice(1,3),16);
+  const g=parseInt(hex.slice(3,5),16);
+  const b=parseInt(hex.slice(5,7),16);
+  updateUI(r,g,b);
+}
+
+function clearHistory(){history=[];renderHistory();}
+
+// ── Copy ──
+function cp(id,btn){
+  const text=document.getElementById(id).textContent;
+  const done=()=>{btn.textContent='✓ done';btn.classList.add('ok');setTimeout(()=>{btn.textContent='copy';btn.classList.remove('ok')},1600)};
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(text).then(done).catch(()=>{legacyCopy(text);done()});
+  } else {legacyCopy(text);done()}
+}
+function legacyCopy(text){
+  const el=document.createElement('textarea');
+  el.value=text;el.style.cssText='position:fixed;opacity:0';
+  document.body.appendChild(el);el.select();
+  try{document.execCommand('copy')}catch(e){}
+  el.remove();
+}
+
+// ── Camera startup ──
+async function startCamera(){
+  perr.style.display='none';
+  perr.textContent='';
+  try{
+    if(mediaStream) mediaStream.getTracks().forEach(t=>t.stop());
+
+    const constraints={video:{facingMode,width:{ideal:1280},height:{ideal:720}}};
+    mediaStream=await navigator.mediaDevices.getUserMedia(constraints);
+    video.srcObject=mediaStream;
+
+    await new Promise((resolve,reject)=>{
+      const timeout=setTimeout(()=>reject(new Error('Video load timeout')),10000);
+      const check=()=>{
+        if(video.readyState>=2 && video.videoWidth>0 && video.videoHeight>0){
+          clearTimeout(timeout);
+          resolve();
+        }
+      };
+      video.oncanplay=check;
+      video.onloadeddata=check;
+      video.onloadedmetadata=check;
+      const poll=setInterval(()=>{
+        if(video.videoWidth>0){clearInterval(poll);clearTimeout(timeout);resolve();}
+      },100);
+    });
+
+    await video.play().catch(()=>{}); 
+
+    if(!video.videoWidth||!video.videoHeight){
+      throw new Error('Camera opened but no video dimensions available.');
+    }
+
+    ready=true;
+    perm.style.display='none';
+    camWrap.classList.add('live');
+    status.classList.add('live');
+    stxt.textContent='LIVE';
+
+    dbg.textContent=`${video.videoWidth}×${video.videoHeight}`;
+
+    try{
+      const devs=await navigator.mediaDevices.enumerateDevices();
+      if(devs.filter(d=>d.kind==='videoinput').length>1) swbtn.style.display='inline-flex';
+    }catch(_){}
+
+  }catch(err){
+    ready=false;
+    perr.style.display='block';
+    if(err.name==='NotAllowedError'||err.name==='PermissionDeniedError'){
+      perr.textContent='❌ Camera permission denied. Click the camera icon in your browser address bar and allow access, then click Start Camera again.';
+    } else if(err.name==='NotFoundError'||err.name==='DevicesNotFoundError'){
+      perr.textContent='❌ No camera found. Make sure a camera is connected.';
+    } else if(err.name==='NotReadableError'||err.name==='TrackStartError'){
+      perr.textContent='❌ Camera is in use by another app. Close other apps using the camera and try again.';
+    } else {
+      perr.textContent='❌ '+err.message;
+    }
+    console.error('Camera error:',err);
+  }
+}
+
+async function switchCam(){
+  ready=false;
+  frozen=false;snap=null;
+  fzbtn.textContent='⏸ Freeze';
+  fbadge.style.display='none';
+  facingMode=facingMode==='environment'?'user':'environment';
+  await startCamera();
+}
+
+function toggleFreeze(){
+  if(!ready) return;
+  frozen=!frozen;
+  if(frozen){
+    ofc.width=video.videoWidth;
+    ofc.height=video.videoHeight;
+    octx.drawImage(video,0,0);
+    snap=octx.getImageData(0,0,ofc.width,ofc.height);
+    fzbtn.textContent='▶ Resume';
+    fbadge.style.display='block';
+  } else {
+    snap=null;
+    fzbtn.textContent='⏸ Freeze';
+    fbadge.style.display='none';
+  }
+}
+
+startCamera();
+</script>
+</body>
+</html>
